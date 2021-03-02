@@ -1,4 +1,4 @@
-**Last Update Date：2021/2/10-17:12**
+**Last Update Date：2021/2/28-17:18**
 
 # Machine Learning-Stanford
 
@@ -763,4 +763,398 @@ $$
 | fewer parameters           | more parameters                                              |
 | more prone to underfitting | more prone to overfitting（use regularization to address overfitting） |
 | computationally cheaper    | computationally more expensive                               |
+
+# 10 Machine Learning System Design
+
+### 10.1 Error Metrics for Skewed Classes
+
+在分类问题中，不同标签之间的数量差距十分大，则称这种情况为偏斜类（Skewed Classes），当使用分类误差或者分类准确率在对模型做出评估时并不能反映其真实情况，在这里需要提出一种新的模型评估方法来度量模型在处理偏斜类分类问题上的表现。
+
+**Precision/Recall：**
+
+$y=1$ in presence of rare class that we want to detect
+
+| predicted\actual | Positive             | Negative             |
+| :--------------- | :------------------- | -------------------- |
+| **Positive**     | TP（True Positive）  | FP（False Positive） |
+| **Negative**     | FN（False Negative） | TN（True Negative）  |
+
+- TP（True Positive）表示样本的真实类别为正，最后预测得到的结果也为正
+- FP（False Positive）表示样本的真实类别为负，最后预测得到的结果却为正
+- FN（False Negative）表示样本的真实类别为正，最后预测得到的结果却为负
+- TN（True Negative）表示样本的真实类别为负，最后预测得到的结果也为负
+
+$$
+Accuracy=\frac{TP+TN}{TP+FP+FN+TN} \\
+Precision=\frac{TP}{TP+FP} \\
+Recall=\frac{TP}{TP+FN} \\
+$$
+
+- $Accuracy$（准确率）
+- $Precision$（查准率）：在所有预测为正类别的样本中，正确预测为正样本的概率
+- $Recall$（召回率）：在所有真实为正类别的样本中，正确预测为正样本的概率
+
+对于同时拥有高查准率与高召回率的模型，可以被评估为表现好。
+
+### 10.2 Trading off Precision and Recall
+
+$$
+\text{Predict } =
+\begin{cases}
+1 &\text{ if } h_\theta(x)\geqslant threshold \\
+0 &\text{otherwise}
+\end{cases}
+$$
+
+- 当 $threshold$ 取值越接近于 $1$，$Precision$ 越大，$Recall$ 越小
+- 当 $threshold$ 取值越接近于 $0$，$Precision$ 越小，$Recall$ 越大
+
+对于查准率与召回率的权衡，对模型做出评估：
+$$
+F_1Score=2\frac{PR}{P+R}
+$$
+$F_1Score$ 也可以帮助选择 $threshold$：
+
+- 设置不同的 $threshold$ 在交叉验证集上测试
+- 选择使得 $F_1Score$ 最高的 $threshold$
+
+# 11 Support Vector Mechine
+
+### 11.1 Optimization Objective
+
+**Alternative view of logistic regression：**
+
+![Machine Learning(12)](.\SVG\Machine Learning(12).svg)
+
+- $z=\theta^Tx$
+
+**Logistic Regression Cost Function：**
+$$
+J\left( \theta  \right)=\frac{1}{m}\sum\limits_{i=1}^{m}{\left[{{y}^{(i)}}\left(-\log  {h_\theta}( {{x}^{(i)}} ) \right) +\left( 1-{{y}^{(i)}} \right)\left( -\log ( 1-{h_\theta}( {{x}^{(i)}} ) ) \right)\right]} +  \frac{\lambda}{2m}  \sum\limits_{j=1}^{n}{\theta_{j}^{2}}
+$$
+**SVM Cost Function（no kernel）：**
+$$
+J\left( \theta  \right)=C\sum\limits_{i=1}^{m}{\left[{{y}^{(i)}} cost_1(\theta^Tx^{(i)})+\left( 1-{{y}^{(i)}} \right)cost_0(\theta^Tx^{(i)}) \right]}+  \frac{1}{2}  \sum\limits_{j=1}^{n}{\theta_{j}^{2}}
+$$
+
+- $C$ 的作用类似于 $\frac{1}{\lambda}$
+
+**SVM Hypothesis：**
+$$
+h_\theta(x)=
+\begin{cases}
+1 & \text{if }\   \theta^Tx \geqslant 0 \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+### 11.2 Kernels
+
+**SVM with Kernels：**
+
+将每一个训练实例 $x$ 都作为一个标记 $l$（landmark）
+$$
+\text{Given } (x^{(1)},y^{(1)}),(x^{(2)},y^{(2)}),...(x^{(m)},y^{(m)}) \\
+\text{Choose } l^{(1)}=x^{(1)},l^{(2)}=x^{(2)},...,l^{(m)}=x^{(m)}
+$$
+
+$$
+\begin{aligned}
+\text{For training }& \text{example }  (x^{(i)},y^{(i)}) \text{:} \\
+& f_1^{(i)}=similarity(x^{(i)},l^{(1)}) \\
+& f_2^{(i)}=similarity(x^{(i)},l^{(2)}) \\
+& \qquad \dots\\
+& f_i^{(i)}=similarity(x^{(i)},l^{(i)})=exp(-\frac{\left \| x^{(i)}-l^{(i)} \right \|^2 }{2\sigma^2}) =1\\
+& \qquad \dots\\
+& f_m^{(i)}=similarity(x^{(i)},l^{(m)}) \\
+\end{aligned} \qquad  \qquad
+
+f^{(i)}=
+\begin{bmatrix}
+f_0^{(i)}\\
+f_1^{(i)}\\
+f_2^{(i)}\\
+\vdots\\
+f_m^{(i)}\\
+\end{bmatrix}
+\qquad (f_0^{(i)}=1)
+$$
+
+- $similarity(x,l^{(i)})$（相似度函数）代表 $x$ 与 $l^{(i)}$ 相似度的度量，也被称为核函数（Kernel），在这里使用的是高斯核
+    $$
+    k(x,l^{(i)})=exp(-\frac{\left \| x-l^{(i)} \right \|^2 }{2\sigma^2})
+    $$
+
+**Model Representation：**
+$$
+\begin{aligned}
+& \text{Hypothesis:} && h_\theta \left( x \right)=
+\begin{cases}
+1 &\text{if } \theta^Tf \geqslant 0 \\
+0 &\text{otherwise}
+\end{cases}
+\\
+&\text{Cost Function:} && J\left( \theta  \right)=C\sum\limits_{i=1}^{m}{\left[{{y}^{(i)}} cost_1(\theta^Tf^{(i)})+\left( 1-{{y}^{(i)}} \right)cost_0(\theta^T f^{(i)}) \right]}+  \frac{1}{2}  \sum\limits_{j=1}^{m}{\theta_{j}^{2}} \\
+\end{aligned}
+$$
+
+- $\theta \in \mathbb{R}^{m+1}$，故正则化项求和上标 $n=m$ 
+
+**SVM Parameters：**
+
+$C$（类似于$\frac{1}{\lambda}$）
+
+- Large $C$：high variance，low bias
+- Small $C$：high bias，low variance
+
+$\sigma^2$
+
+- Small $\sigma^2$：$f$ vary sharply，high variance，low bias
+- Large $\sigma^2$：$f$ vary smoothly，high bias，low variance
+
+![Machine Learning(12)](.\SVG\Machine Learning(13).svg)
+
+
+- 上图中高斯核是另一种表示形式：
+    $$
+    k(x,l^{(i)})=exp(-\gamma \left \| x-l^{(i)} \right \|^2 )
+    $$
+    
+
+###  11.3 Using an SVM
+
+**Logistic Regression vs SVM**
+
+- if $n$ is large（relative to $m$）
+
+    Use logistic regression or SVM without kernel
+
+- if $n$ is small，$m$ is intermediate
+
+    Use SVM with Gaussian kernel
+
+- if $n$ is small，$m$ is large
+
+    Crear/Add more features，then use logistic regression or SVM without kernel
+
+# 12 Clustering
+
+### 12.1 Unsupervised Learning Introduction
+
+**Unsupervised vs Supervised**
+
+- 监督学习：在一个有标签的训练集中，目标是找到能够区分正负样本的决策边界，据此需要拟合一个假设函数。
+- 无监督学习：训练样本的标记信息是未知的，目标是通过对无标记训练样本的学习来揭示数据的内在性质及规律，为进一步的数据分析提供基础。
+
+### 12.2 K-means Algorithm
+
+**K-means Algorithm：**
+
+$\text{Input:}\\
+\qquad K\text{(number of clusters)}\\
+\qquad \text{Training set}\{x^{(1)},x^{(2)},...,x^{(m)}\}\\
+\text{Randomly initialize } K \text{ cluster centroids } \mu_1,\mu_2,...,\mu_K\in\mathbb{R}^n\\
+\text{Repeat:}\\
+\qquad C_i=\varnothing \ (i=1,2,...,K)\\
+\qquad \text{for } i=1 \text{ to } m \text{ (cluster assignment) }\\
+\qquad \qquad \lambda^{(i)}=\min\limits_{k \in\{1,2,...,K\} }\|x^{(i)}-\mu_{k}\|^2\\
+\qquad \qquad C_{\lambda^{(i)}}=C_{\lambda^{(i)}}\cup\{x^{(i)}\} \\
+\qquad \text{for } k=1 \text{ to } K \text{ (move cluster centroids) }\\
+\qquad \qquad \mu_k=\frac{1}{|C_k|}\sum\limits_{x\in C_k}x\\
+\text{Until }\mu_1,\mu_2,...,\mu_K \text{ no longer to update}\\
+\text{Output:}\\
+\qquad C=\{C_1,C_2,...,C_K\}$
+
+- $x^{(i)}\in \mathbb{R}^n$，删去 $x^{(0)}=1$ 的惯例
+- $\mu^{(k)}$ 称为聚类中心（cluster centroids），若希望将样本聚类成 $K$ 簇，那么应该设置 $K$ 个聚类中心
+- 若没有样本被分配到簇 $k$，常见的做法是直接删除聚类中心 $\mu_{k}$，最终只会得到 $K-1$ 个簇，或者选择重新随机初始化聚类中心
+- $|C_k|$ 表示簇 $k$ 中样本的数量
+
+### 12.2 Optimization Objective
+
+**K-means optimization objective：** 
+$$
+\begin{aligned}
+&\text{(Distortion) Cost Function:} && J(\lambda^{(1)},\lambda^{(2)},...,\lambda^{(m)},\mu_1,\mu_2,...,\mu_K)=\frac{1}{m}\sum^{m}_{i=1}\|x^{(i)}-\mu_{\lambda^{(i)}}\|^2\\
+&\text{Goal:} &&\text{minimize }J(\lambda^{(1)},\lambda^{(2)},...,\lambda^{(m)},\mu_1,\mu_2,...,\mu_K)
+\end{aligned}
+$$
+
+- $\lambda^{(i)}:$ index of cluster（$1,2,...,K$）to which example $x^{(i)}$ is currently assigned
+- $\mu_k:$ cluster centroid $k$（$\mu_k\in \mathbb{R}^n$）
+- $\mu_{\lambda^{(i)}}:$ cluster centroid of cluster to which example $x^{(i)}$ has been assigned
+
+- 在 K-means 算法中
+    - 簇分配通过更新 $\lambda^{(1)},\lambda^{(2)},...,\lambda^{(m)}$ 以 $\text{minimize } J$
+    - 移动聚类中心通过更新 $\mu_1,\mu_2,...,\mu_K$ 以 $\text{minimize } J$
+
+### 12.3 Random Initialization
+
+随机初始化聚类中心：随机选择 $K$ 个训练样本，令 $K$ 个聚类中心分别与这 $K$ 个训练样本相等
+
+K-means 算法由于随机初始化聚类中心，可能只达到局部最优，通常可以多次运行 K-means 算法，每一次重新随机初始化，最终选择使得代价函数 $J$ 最小的聚类结果。
+
+# 13 Dimensionality Reducion
+
+### 13.1 Principal Component Analysis Algorithm
+
+**Object：**
+
+试图寻找一个低维“平面”，对高维数据集进行投影，并最小化投影平方误差。
+
+**Data Preprocessing：**
+
+Training Set：$x^{(1)},x^{(2)},...,x^{(m)}$
+
+- mean normalization
+
+    $\mu_j=\frac{1}{m}\displaystyle\sum_{i=1}^mx_j^{(i)}\\
+    \text{Replace each } x_j^{(i)} \text{ with } x_j-\mu_j$
+
+- feature scaling
+
+**Principal Component Analysis：**
+
+- ①计算协方差矩阵 $\Sigma$（$\Sigma$ 为对称矩阵）：
+
+$$
+\Sigma=\frac{1}{m}\sum_{i=1}^{n}(x^{(i)})({x^{(i)}})^T
+$$
+
+- ②计算 $\Sigma$ 的特征向量（$P$ 的列向量即为 $\Sigma$ 的特征向量，且 $P$ 为正交矩阵，使用到对称矩阵的对角化）：
+    $$
+    \Sigma=P\varLambda P^T
+    $$
+    将 $P$ 使用列向量表示 $P=(p_1,p_2,...,p_n)$
+
+- ③取 $P$ 的前 $k$ 个列向量，组成矩阵 $P_{reduce}=(p_1,p_2,...,p_k)$
+    $$
+    z^{(i)}={P_{reduce}}^Tx^{(i)} \qquad (z\in\mathbb{R}^{k\times1})
+    $$
+
+**Note：**
+
+- 协方差矩阵为正定矩阵==（why？）==
+
+- 若训练集：
+    $$
+    X=
+    \begin{bmatrix}
+    {x^{(1)}}^T\\
+    {x^{(2)}}^T\\
+    \vdots\\
+    {x^{(m)}}^T\\
+    \end{bmatrix}_{m\times n}
+    $$
+    则
+    $$
+    \Sigma=\frac{1}{m}X^TX \qquad  \qquad \qquad 
+    z=
+    \begin{bmatrix}
+    {z^{(1)}}^T \\
+    {z^{(2)}}^T \\
+    \vdots \\
+    {z^{(m)}}^T \\
+    \end{bmatrix}_{m\times k} =
+    XP_{reduce}
+    $$
+
+- $x^{(i)}\in \mathbb{R}^n$
+
+### 13.2 Choosing the Number of Principal Components
+
+平均投影误差：
+$$
+\frac{1}{m}\sum_{i=1}^m\|x^{(i)}-x_{approx}^{(i)} \|^2
+$$
+
+- $x_{approx}^{(i)}$ 为 $x^{(i)}$ 投影到低维“平面”的坐标
+
+数据总方差：
+$$
+\frac{1}{m}\sum_{i=1}^{m}\|x^{(i)}\|^2
+$$
+**Choosing $k$（number of principal components）：**
+
+- 方式1：
+    $$
+    \frac{\frac{1}{m}\sum_{i=1}^m\|x^{(i)}-x_{approx}^{(i)} \|^2}{\frac{1}{m}\sum_{i=1}^{m}\|x^{(i)}\|^2} \leqslant 0.01
+    $$
+    
+
+    - “$99\%$ 的方差被保留”
+    - $k$ 越大，上式结果越小。寻找满足上式时，$k$  的最小值
+
+- 方式2：
+
+    对 $\Sigma$ 进行奇异值奇异值分解：
+    $$
+    USV^T=\Sigma
+    $$
+    寻找满足
+    $$
+    \frac{\displaystyle\sum_{i=1}^{k}S_{i}}{\displaystyle\sum_{i=1}^{m}S_{i}}\geqslant0.99
+    $$
+
+    时，$k$ 的最小值
+
+    - $S_i$ 表示 $S$ 主对角线上从左上到右下第 $i$ 个元素
+    - “$99\%$ 的方差被保留”
+    - 上式的意义：主成分数量为 $k$ 时，原始高维数据集信息保留程度的度量
+
+### 13.3 Reconstruction from Compress Representation
+
+由 PCA：
+$$
+z^{(i)}={P_{reduce}}^Tx^{(i)} \qquad
+$$
+由 $z^{(i)}$ 近似重构 $x^{(i)}$：
+$$
+x_{approx}^{(i)}=P_{reduce}z^{(i)}
+$$
+
+- $x_{approx}^{(i)}$ 为 $x^{(i)}$ 投影到低维“平面”的坐标
+
+- $$
+    x_{approx}=
+    \begin{bmatrix}
+    {x_{approx}^{(m)}}^T\\
+    {x_{approx}^{(m)}}^T\\
+    \vdots \\
+    {x_{approx}^{(m)}}^T\\
+    \end{bmatrix}_{m\times n}=
+    z{P_{reduce}}^T
+    $$
+
+- 
+
+### 13.4 Advice for applying PCA
+
+**Supervised Learning Speedup：**
+
+Training Set：$(x^{(1)},y^{(1)}),(x^{(2)},y^{(2)}),...,(x^{(m)},y^{(m)})$
+After PCA
+New Training Set：$(z^{(1)},y^{(1)}),(z^{(2)},y^{(2)}),...,(z^{(m)},y^{(m)})$
+
+- 在 Training Set 中使用 PCA **定义**映射 $f$：$x^{(i)}\to z^{(i)}$，即 $P_{reduce}$ 是对 Training Set 主成分分析得到
+- 将映射 $f$ **应用**在CV Set、Test Set，以获得 New CV Set、New Test Set
+
+**Bad use of PCA：To fix overfitting**
+
+Please use regularization instead
+
+**PCA is sometimes used where it shouldn’t be**
+
+Before implementing PCA, first try running whatever you want to do with the original data $x^{(i)}$, only if that doesn’t do what you want, then implement PCA and consider using $z^{(i)}$.
+
+
+
+
+
+
+
+
+
+
+
 
